@@ -47,10 +47,11 @@ public class MyConnectFour
             if (gameBoard[i][column] == 0)
             {
                 gameBoard[i][column] = player;
-                break;
+                return true;
             }
         }
-        return true;
+
+        return false;
     }
 
     public boolean isFull()
