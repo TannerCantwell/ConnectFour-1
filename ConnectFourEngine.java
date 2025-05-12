@@ -20,6 +20,14 @@ public class ConnectFourEngine {
             return opponentWin;
         }
 
+        int engineDouble = checkPossibleDouble(gameBoard, engineNumber);
+        int opponentDouble = checkPossibleDouble(gameBoard, opponentNumber);
+
+        if (opponentDouble != -1) // check if opponent can make a double (two-sided connect four) on next move (block if so)
+        {
+            return opponentDouble;
+        }
+
         ArrayList<Integer> possibleMoves = new ArrayList<Integer>(); // list to hold moves that don't give opponent a chance
 
         for (int i = 0; i < 7; i++) // check what moves don't give opponent a chance and are in bounds
@@ -28,6 +36,11 @@ public class ConnectFourEngine {
             {
                 possibleMoves.add(i);
             }
+        }
+
+        if (engineDouble!= -1 && possibleMoves.contains(engineDouble)) // check if the engine can make a double and if so, make the move as long as it doesn't give opponent a chance to win
+        {
+            return engineDouble;
         }
 
         for (int i = 0; i < possibleMoves.size(); i++) // check if any possible move gives engine a chance
@@ -52,10 +65,6 @@ public class ConnectFourEngine {
         int vertical = CPWVertical(gameBoard, player);
         int positive = CPWPositive(gameBoard, player);
         int negative = CPWNegative(gameBoard, player);
-
-        int horizontalDouble = CPWHorizontalDouble(gameBoard, player);
-        int positiveDouble = CPWPositiveDouble(gameBoard, player);
-        int negativeDouble = CPWNegativeDouble(gameBoard, player);
         
         if (horizontal != -1)
         {
@@ -76,6 +85,15 @@ public class ConnectFourEngine {
         {
             return negative;
         }
+
+        return -1;
+    }
+
+    private static int checkPossibleDouble(int[][] gameBoard, int player)
+    {
+        int horizontalDouble = CPDHorizontal(gameBoard, player);
+        int positiveDouble = CPDPositive(gameBoard, player);
+        int negativeDouble = CPDNegative(gameBoard, player);
 
         if (horizontalDouble != -1)
         {
@@ -140,7 +158,7 @@ public class ConnectFourEngine {
             
         if (dropPiece(gameBoardCopy, engine, col))
         {
-            if (checkPossibleWin(gameBoardCopy, player) == -1)
+            if (checkPossibleWin(gameBoardCopy, player) == -1 && checkPossibleDouble(gameBoardCopy, player) == -1)
             {
                 return false;
             }
@@ -314,17 +332,20 @@ public class ConnectFourEngine {
         return -1;
     }
 
-    private static int CPWHorizontalDouble(int[][] gameBoard, int player)
+    // check possible double functions
+
+    private static int CPDHorizontal(int[][] gameBoard, int player)
     {
         int count = 0;
         int emptySpace1 = -1;
         int emptySpace2 = -1;
+        int emptySpace3 = -1;
 
         for (int i = 5; i >= 0; i--)
         {
-            for (int j = 0; j < 4; j++)
+            for (int j = 0; j < 3; j++)
             {
-                for (int k = j; k < j + 4; k++)
+                for (int k = j; k < j + 5; k++)
                 {
                     if (gameBoard[i][k] == player)
                     {
@@ -336,36 +357,41 @@ public class ConnectFourEngine {
                         if (emptySpace1 == -1)
                         {
                             emptySpace1 = k;
-                        } else {
+                        } else if (emptySpace2 == -1) {
                             emptySpace2 = k;
+                        } else {
+                            emptySpace3 = k;
                         }
                     }
                 }
 
-                if (count == 2 && Math.abs(emptySpace1 - emptySpace2) == 3)
+                if (count == 2 && Math.abs(emptySpace1 - emptySpace3) == 4)
                 {
-                    if (checkWinSpot(gameBoard, i, emptySpace1) && checkWinSpot(gameBoard, i, emptySpace2))
+                    if (checkWinSpot(gameBoard, i, emptySpace1) && checkWinSpot(gameBoard, i, emptySpace2) && checkWinSpot(gameBoard, i, emptySpace3))
                     {
-                        return emptySpace1;
+                        return emptySpace2;
                     }
                 }
 
                 count = 0;
                 emptySpace1 = -1;
                 emptySpace2 = -1;
+                emptySpace3 = -1;
             }
         }
 
         return -1;
     }
 
-    private static int CPWPositiveDouble(int[][] gameBoard, int player)
+    private static int CPDPositive(int[][] gameBoard, int player)
     {
         int count = 0;
         int emptySpace1Row = -1;
         int emptySpace1Col = -1;
         int emptySpace2Row = -1;
         int emptySpace2Col = -1;
+        int emptySpace3Row = -1;
+        int emptySpace3Col = -1;
 
         for (int i = 5; i >= 0; i--)
         {
@@ -373,9 +399,9 @@ public class ConnectFourEngine {
             {
                 if (gameBoard[i][j] == player)
                 {
-                    if (i - 3 >= 0 && j + 3 < 7)
+                    if (i - 4 >= 0 && j + 4 < 7)
                     {
-                        for (int k = 0; k < 4; k++)
+                        for (int k = 0; k < 5; k++)
                         {
                             if (gameBoard[i - k][j + k] == player)
                             {
@@ -388,18 +414,21 @@ public class ConnectFourEngine {
                                 {
                                     emptySpace1Row = i - k;
                                     emptySpace1Col = j + k;
-                                } else {
+                                } else if (emptySpace2Row == -1) {
                                     emptySpace2Row = i - k;
                                     emptySpace2Col = j + k;
+                                } else {
+                                    emptySpace3Row = i - k;
+                                    emptySpace3Col = j + k;
                                 }
                             }
                         }
 
-                        if (count == 2 && Math.abs(emptySpace1Row - emptySpace2Row) == 3)
+                        if (count == 2 && Math.abs(emptySpace1Row - emptySpace3Row) == 4)
                         {
-                            if (checkWinSpot(gameBoard, emptySpace1Row, emptySpace1Col) && checkWinSpot(gameBoard, emptySpace2Row, emptySpace2Col))
+                            if (checkWinSpot(gameBoard, emptySpace1Row, emptySpace1Col) && checkWinSpot(gameBoard, emptySpace2Row, emptySpace2Col) && checkWinSpot(gameBoard, emptySpace3Row, emptySpace3Col))
                             {
-                                return emptySpace1Col;
+                                return emptySpace2Col;
                             }
                         }
 
@@ -408,6 +437,8 @@ public class ConnectFourEngine {
                         emptySpace1Col = -1;
                         emptySpace2Row = -1;
                         emptySpace2Col = -1;
+                        emptySpace3Row = -1;
+                        emptySpace3Col = -1;
                     }
                 }
             }
@@ -416,13 +447,15 @@ public class ConnectFourEngine {
         return -1;
     }
 
-    private static int CPWNegativeDouble(int[][] gameBoard, int player)
+    private static int CPDNegative(int[][] gameBoard, int player)
     {
         int count = 0;
         int emptySpace1Row = -1;
         int emptySpace1Col = -1;
         int emptySpace2Row = -1;
         int emptySpace2Col = -1;
+        int emptySpace3Row = -1;
+        int emptySpace3Col = -1;
 
         for (int i = 5; i >= 0; i--)
         {
@@ -445,18 +478,21 @@ public class ConnectFourEngine {
                                 {
                                     emptySpace1Row = i - k;
                                     emptySpace1Col = j - k;
-                                } else {
+                                } else if (emptySpace2Row == -1) {
                                     emptySpace2Row = i - k;
                                     emptySpace2Col = j - k;
+                                } else {
+                                    emptySpace3Row = i - k;
+                                    emptySpace3Col = j - k;
                                 }
                             }
                         }
 
-                        if (count == 2 && Math.abs(emptySpace1Row - emptySpace2Row) == 3)
+                        if (count == 2 && Math.abs(emptySpace1Row - emptySpace3Row) == 4)
                         {
-                            if (checkWinSpot(gameBoard, emptySpace1Row, emptySpace1Col) && checkWinSpot(gameBoard, emptySpace2Row, emptySpace2Col))
+                            if (checkWinSpot(gameBoard, emptySpace1Row, emptySpace1Col) && checkWinSpot(gameBoard, emptySpace2Row, emptySpace2Col) && checkWinSpot(gameBoard, emptySpace3Row, emptySpace3Col))
                             {
-                                return emptySpace1Col;
+                                return emptySpace2Col;
                             }
                         }
 
@@ -465,6 +501,8 @@ public class ConnectFourEngine {
                         emptySpace1Col = -1;
                         emptySpace2Row = -1;
                         emptySpace2Col = -1;
+                        emptySpace3Row = -1;
+                        emptySpace3Col = -1;
                     }
                 }
             }
@@ -472,6 +510,8 @@ public class ConnectFourEngine {
 
         return -1;
     }
+
+    // check win spot
 
     private static boolean checkWinSpot(int[][] gameBoard, int row, int col)
     {
